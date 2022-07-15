@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "cenuNEguH9YfBkRpSJO6BzkfkqxBr25DNW6bn9S14WJaA7Rh8ZJsr69Lzy0UsJlUYE8WHmRhIQ63B0NW1gBJFg==",
+  "success": true,
+  "projectFilePath": "/home/ivanov/jobs/testjob/pulse/pulse.csproj",
+  "expectedPackageFiles": [
+    "/home/ivanov/.nuget/packages/microsoft.netcore.app.ref/6.0.6/microsoft.netcore.app.ref.6.0.6.nupkg.sha512",
+    "/home/ivanov/.nuget/packages/microsoft.aspnetcore.app.ref/6.0.6/microsoft.aspnetcore.app.ref.6.0.6.nupkg.sha512",
+    "/home/ivanov/.nuget/packages/microsoft.netcore.app.host.linux-x64/6.0.6/microsoft.netcore.app.host.linux-x64.6.0.6.nupkg.sha512"
+  ],
+  "logs": []
+}
