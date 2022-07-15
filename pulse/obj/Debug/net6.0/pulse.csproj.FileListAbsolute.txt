@@ -1,0 +1,15 @@
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/pulse.csproj.AssemblyReference.cache
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/pulse.GeneratedMSBuildEditorConfig.editorconfig
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/pulse.AssemblyInfoInputs.cache
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/pulse.AssemblyInfo.cs
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/pulse.csproj.CoreCompileInputs.cache
+/home/ivanov/jobs/testjob/pulse/bin/Debug/net6.0/pulse
+/home/ivanov/jobs/testjob/pulse/bin/Debug/net6.0/pulse.deps.json
+/home/ivanov/jobs/testjob/pulse/bin/Debug/net6.0/pulse.runtimeconfig.json
+/home/ivanov/jobs/testjob/pulse/bin/Debug/net6.0/pulse.dll
+/home/ivanov/jobs/testjob/pulse/bin/Debug/net6.0/pulse.pdb
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/pulse.dll
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/refint/pulse.dll
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/pulse.pdb
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/pulse.genruntimeconfig.cache
+/home/ivanov/jobs/testjob/pulse/obj/Debug/net6.0/ref/pulse.dll
