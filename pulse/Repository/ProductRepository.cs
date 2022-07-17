@@ -1,0 +1,89 @@
+﻿using System.Data.SqlClient;
+namespace pulse.Repository
+{
+
+    public class ProductRepository : IRepository<Product>
+    {
+        private readonly string _tableName = "Product";
+        public async Task<bool> Create(Product entity, CancellationToken cancellationToken = default)
+        {
+            using (var _connection = new SqlConnection(Extension.Extension.GetConnectionString().ConnectionString))
+            {
+                await _connection.OpenAsync(cancellationToken);
+ 
+                SqlTransaction transaction = _connection.BeginTransaction();
+                try
+                {
+                    SqlCommand command = _connection.CreateCommand();
+                    command.Connection = _connection;
+                    command.Transaction = transaction;
+
+                    command.CommandText = Extension.Extension.GetCreateQuery(entity);
+
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+
+                    transaction.Commit();
+                    Console.Clear();
+                    $"Товар {entity.Name} успешно добавлен в базу продуктов".PrintLineColor(ConsoleColor.Green);
+                    Console.Write("Нажмите любую клавишу для продолжения...: ");
+                    Console.ReadKey();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    ex.Message.PrintLineColor(ConsoleColor.Red);
+                    Console.Write("Произошла ошибка при создании таблиц\r\nНажмите любую клавишу для продолжения...: ");
+                    Console.ReadKey();
+                }
+                finally
+                {
+                    _connection.Close();
+                }
+            }
+            return false;
+        }
+
+        public async Task<bool> Delete(int Id, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<Product>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            List<Product> _products = new List<Product>();
+            using (var _connection = new SqlConnection(Extension.Extension.GetConnectionString().ConnectionString))
+            {
+                await _connection.OpenAsync(cancellationToken);
+                SqlCommand command = _connection.CreateCommand();
+                command.Connection = _connection;
+                command.CommandText = "SELECT ProductId,Name FROM Product";
+
+                using(var reader = await command.ExecuteReaderAsync(cancellationToken))
+                {
+                    if (reader.HasRows)
+                    {
+                        while(await reader.ReadAsync())
+                        {
+                            _products.Add(new() { ProductId = reader.GetValue(0).ToInt(), Name = reader.GetValue(1).ToString() });
+                        }
+                    }
+                }
+
+
+            }
+            return _products;
+
+        }
+
+        public Task<Product> GetAsync(int Id, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> Update(Product entity, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
