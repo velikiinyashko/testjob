@@ -8,5 +8,10 @@
             Console.WriteLine(PrintText);
             Console.ForegroundColor = ConsoleColor.White;
         }
+
+        public static void Separator()
+        {
+            "--------------------------------------".PrintLineColor(ConsoleColor.Magenta);
+        }
     }
 }

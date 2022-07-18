@@ -4,7 +4,6 @@ namespace pulse.Repository
 
     public class ProductRepository : IRepository<Product>
     {
-        private readonly string _tableName = "Product";
         public async Task<bool> Create(Product entity, CancellationToken cancellationToken = default)
         {
             using (var _connection = new SqlConnection(Extension.Extension.GetConnectionString().ConnectionString))
@@ -76,7 +75,7 @@ namespace pulse.Repository
 
         }
 
-        public Task<Product> GetAsync(int Id, CancellationToken cancellationToken = default)
+        public Task<List<Product>> GetAsync(int Id, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

@@ -58,6 +58,8 @@ CREATE TABLE dbo.Party
     PartyId INT NOT NULL PRIMARY KEY IDENTITY, -- primary key column
     [ProductId] INT NOT NULL,
     [StockId] INT NOT NULL,
+    [RetailId] INT NOT NULL,
+    [Price] FLOAT NOT NULL,
     [Count] INT NOT NULL DEFAULT 0,
     [DateCreate] DATETIME2 DEFAULT GETDATE(), 
 );

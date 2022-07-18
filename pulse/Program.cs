@@ -14,6 +14,7 @@ internal class Program
         Dictionary<ConsoleKey, menuProperty> _modules = new()
         {
             { ConsoleKey.D1, new("1) Работа с товарами", new ProductService()) },
+            { ConsoleKey.D2, new("2) Работа с торговыми точками", new RetailService()) },
             { ConsoleKey.D0, new("0) Инициализация базы", new InitializeService())}
         };
 
@@ -21,7 +22,7 @@ internal class Program
         while (true)
         {
             Console.Clear();
-            "Меню".PrintLineColor(ConsoleColor.Green);
+            " Меню".PrintLineColor(ConsoleColor.Green);
             "------------------------------".PrintLineColor(ConsoleColor.Magenta);
             foreach (var module in _modules)
                 module.Value.Text.PrintLineColor(ConsoleColor.Yellow);

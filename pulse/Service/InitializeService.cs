@@ -9,15 +9,27 @@ namespace pulse.Service
 {
     public class InitializeService : IService
     {
-        public string Header => "Инициализация базы";
+        delegate Task GetEvent(CancellationToken cancellationToken = default);
 
+        private record EventMenu(string Text, GetEvent Method);
+
+        private Dictionary<ConsoleKey, EventMenu> _menu;
+
+        public InitializeService()
+        {
+            _menu = new()
+            {
+                {ConsoleKey.D1, new("1) Инициализировать базу данных", CreateTable) }
+            };
+        }
 
         private void menu()
         {
-            Header.PrintLineColor(ConsoleColor.Green);
+            "Работа с базой".PrintLineColor(ConsoleColor.Green);
             "------------------------------".PrintLineColor(ConsoleColor.Magenta);
-            "1) Инициализировать базу данных".PrintLineColor(ConsoleColor.Yellow);           
-            "0) Выход".PrintLineColor(ConsoleColor.Yellow);
+            foreach (var m in _menu)
+                m.Value.Text.PrintLineColor(ConsoleColor.Yellow);
+            "esc) Выход".PrintLineColor(ConsoleColor.Yellow);
             "------------------------------".PrintLineColor(ConsoleColor.Magenta);
             Console.WriteLine();
             Console.Write("Выберете пункт меню:");
@@ -31,55 +43,60 @@ namespace pulse.Service
                 menu();
                 var input = Console.ReadKey();
 
-                switch (input.Key)
-                {
-                    case ConsoleKey.D1:
-                        CreateTable();
-                        continue;
-                    case ConsoleKey.D0:
-                        return;
-                    default:
-                        continue;
-                }
+                if (input.Key == ConsoleKey.Escape)
+                    return;
+
+                if (_menu.ContainsKey(input.Key))
+                    await _menu[input.Key].Method(cancellationToken);
             }
         }
 
-        private void CreateTable()
+        private async Task CreateTable(CancellationToken cancellationToken = default)
         {
-            using(SqlConnection connection = new SqlConnection(Extension.Extension.GetConnectionString().ConnectionString))
-            {
-                connection.Open();
-                SqlTransaction transaction = connection.BeginTransaction("init");
-                var query = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "Create.sql"));
-                try
-                {
-                    SqlCommand command = connection.CreateCommand();
-                    command.Transaction = transaction;
-                    command.Connection = connection;
-                    command.CommandText = query;
 
-                    command.ExecuteNonQuery();
+            Console.Clear();
+            "При инициализаци данные в базе будут уничтожены, вы уверены что хотите продолжить? [y/n]:".PrintLineColor(ConsoleColor.Red);
+            var inpud = Console.ReadKey();
 
-                    transaction.Commit();
-                    Console.Clear();
-                    "Создание таблиц завершено".PrintLineColor(ConsoleColor.Green);
-                    "Нажмите любую клавишу для продолжения...: ".PrintLineColor(ConsoleColor.White);
-                    Console.ReadKey();
+            if (inpud.Key == ConsoleKey.N)
+                return;
 
-                }
-                catch(Exception ex)
+            if (inpud.Key == ConsoleKey.Y)
+                using (SqlConnection connection = new SqlConnection(Extension.Extension.GetConnectionString().ConnectionString))
                 {
-                    Console.Clear();
-                    ex.Message.PrintLineColor(ConsoleColor.Red);
-                    Console.Write("Произошла ошибка при создании таблиц\r\nНажмите любую клавишу для продолжения...: ");
-                    Console.ReadKey();
-                    return;
+                    await connection.OpenAsync(cancellationToken);
+                    SqlTransaction transaction = connection.BeginTransaction("init");
+                    try
+                    {
+                        SqlCommand command = connection.CreateCommand();
+                        command.Transaction = transaction;
+                        command.Connection = connection;
+                        command.CommandText = await File.ReadAllTextAsync(Path.Combine(Environment.CurrentDirectory, "Create.sql"), cancellationToken); ;
+                        await command.ExecuteNonQueryAsync(cancellationToken);
+                        
+                        command.CommandText = await File.ReadAllTextAsync(Path.Combine(Environment.CurrentDirectory, "CreateView.sql"), cancellationToken);
+                        await command.ExecuteNonQueryAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+                        
+                        Console.Clear();
+                        "Создание таблиц завершено".PrintLineColor(ConsoleColor.Green);
+                        "Нажмите любую клавишу для продолжения...: ".PrintLineColor(ConsoleColor.White);
+                        Console.ReadKey();
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Clear();
+                        ex.Message.PrintLineColor(ConsoleColor.Red);
+                        Console.Write("Произошла ошибка при инициализации базы таблиц\r\nНажмите любую клавишу для продолжения...: ");
+                        Console.ReadKey();
+                        return;
+                    }
+                    finally
+                    {
+                        connection.Close();
+                    }
                 }
-                finally
-                {
-                    connection.Close();
-                }
-            }
 
         }
     }

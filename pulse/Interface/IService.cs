@@ -2,8 +2,11 @@
 {
     public interface IService
     {
-        public string Header { get; }
+        /// <summary>
+        /// Вывод на экран меню сервиса
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public Task PrintMenu(CancellationToken cancellationToken = default);
-
     }
 }

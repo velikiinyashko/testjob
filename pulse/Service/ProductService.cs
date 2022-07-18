@@ -1,11 +1,13 @@
-﻿namespace pulse.Service
+﻿global using static pulse.Extension.Extension;
+
+namespace pulse.Service
 {
     public class ProductService : IService
     {
-        public string Header { private set; get; } = "Товары: ";
+        private string Header = "Товары: ";
         private IRepository<Product> _repository;
-        delegate Task GetEvent(CancellationToken cancellationToken = default);
-        record GetEventRecord(string Name, GetEvent Event);
+        //delegate Task GetEvent(CancellationToken cancellationToken = default);
+        //record GetEventRecord(string Name, GetEvent Event);
         Dictionary<ConsoleKey, GetEventRecord> _events;
 
         public ProductService()
@@ -30,11 +32,9 @@
                 Console.Clear();
                 Header.PrintLineColor(ConsoleColor.Green);
                 await GetAllProduct();
-                "------------------------------".PrintLineColor(ConsoleColor.Magenta);
-                foreach (var item in _events)
-                    item.Value.Name.PrintLineColor(ConsoleColor.Yellow);
-                "------------------------------".PrintLineColor(ConsoleColor.Magenta);
-                Console.WriteLine();
+    
+                _events.PrintMenu();
+       
                 Console.Write("Выберете пункт меню:");
 
 
