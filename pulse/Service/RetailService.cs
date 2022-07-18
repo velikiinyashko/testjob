@@ -122,7 +122,7 @@ namespace pulse.Service
             _products = new(await _productRepository.GetAllAsync(cancellationToken));
             foreach (var item in _products)
                 $"[{item.ProductId}] Название товара: {item.Name}".PrintLineColor(ConsoleColor.White);
-        } 
+        }
         #endregion
 
         #region GetParties
@@ -142,7 +142,7 @@ namespace pulse.Service
                 $"[{item.PartyId}] Название товара: {item.ProductName}".PrintLineColor(ConsoleColor.White);
                 $"Торговая точка: {item.RetailName}; Склад: {item.StockName}; Количество: {item.Count}; Стоимость: {item.Price}".PrintLineColor(ConsoleColor.White);
             }
-        } 
+        }
         #endregion
 
         #region AddRetail
@@ -186,26 +186,44 @@ namespace pulse.Service
         /// <returns></returns>
         private async Task DeleteRetail(CancellationToken cancellationToken = default)
         {
-            Console.Clear();
-            await GetAllRetail(cancellationToken);
-            Console.Write("\r\nИд удаляемой точки: ");
-
-            var _retailId = Console.ReadLine().ToInt();
             while (true)
             {
-                Console.Clear();
-                await GetStock(_retailId, cancellationToken);
-                "Вы действительно хотите удалить эту точку?\r\nЭто также удалит все партии и склады! [n/y]".PrintLineColor(ConsoleColor.Red);
-                var input = Console.ReadKey();
-                if (input.Key == ConsoleKey.N)
-                    return;
+                try
+                {
+                    Console.Clear();
+                    await GetAllRetail(cancellationToken);
+                    Console.Write("\r\nИд удаляемой точки (0 для выхода): ");
 
-                if (input.Key != ConsoleKey.Y)
-                    continue;
+                    var _retailId = Console.ReadLine().ToInt();
 
-                var res = await _repository.Delete(_retailId, cancellationToken);
-                if (res)
+                    if (_retailId == 0)
+                        return;
+
+                    while (true)
+                    {
+                        Console.Clear();
+                        await GetStock(_retailId, cancellationToken);
+                        "Вы действительно хотите удалить эту точку?\r\nЭто также удалит все партии и склады! [n/y]".PrintLineColor(ConsoleColor.Red);
+                        var input = Console.ReadKey();
+                        if (input.Key == ConsoleKey.N)
+                            return;
+
+                        if (input.Key != ConsoleKey.Y)
+                            continue;
+
+                        var res = await _repository.Delete(_retailId, cancellationToken);
+                        if (res)
+                            return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Clear();
+                    ex.Message.PrintLineColor(ConsoleColor.Red);
+                    Console.Write("Для продолжения нажмите любую клавишу...");
+                    Console.ReadKey();
                     return;
+                }
             }
         }
         #endregion
@@ -247,35 +265,52 @@ namespace pulse.Service
         /// <returns></returns>
         private async Task DeleteStock(CancellationToken cancellationToken = default)
         {
-            Console.Clear();
-            await GetAllRetail(cancellationToken);
-            Console.Write("\r\nИд торговой точки: ");
-            var _retailId = Console.ReadLine().ToInt();
-
-            Console.Clear();
-            await GetStock(_retailId, cancellationToken);
-            Console.Write("\r\nИд склада: ");
-            var _stockId = Console.ReadLine().ToInt();
-
             while (true)
             {
-                Console.Clear();
-                var item = _stock.Where(q => q.StockId == _stockId).First();
-                $"[{item.StockId}] Название склада: {item.Name}".PrintLineColor(ConsoleColor.White);
+                try
+                {
+                    Console.Clear();
+                    await GetAllRetail(cancellationToken);
+                    Console.Write("\r\nИд торговой точки (0 для выхода): ");
 
-                "Вы действительно хотите удалить этот склад?\r\nЭто также удалит все партии для этого склада! [n/y]".PrintLineColor(ConsoleColor.Red);
-                var input = Console.ReadKey();
-                if (input.Key == ConsoleKey.N)
-                    return;
+                    var _retailId = Console.ReadLine().ToInt();
+                    if (_retailId == 0)
+                        return;
 
-                if (input.Key != ConsoleKey.Y)
+                    Console.Clear();
+                    await GetStock(_retailId, cancellationToken);
+                    Console.Write("\r\nИд склада: ");
+                    var _stockId = Console.ReadLine().ToInt();
+
+                    while (true)
+                    {
+                        Console.Clear();
+                        var item = _stock.Where(q => q.StockId == _stockId).First();
+                        $"[{item.StockId}] Название склада: {item.Name}".PrintLineColor(ConsoleColor.White);
+
+                        "Вы действительно хотите удалить этот склад?\r\nЭто также удалит все партии для этого склада! [n/y]".PrintLineColor(ConsoleColor.Red);
+                        var input = Console.ReadKey();
+                        if (input.Key == ConsoleKey.N)
+                            return;
+
+                        if (input.Key != ConsoleKey.Y)
+                            continue;
+
+                        await _stockRepository.Delete(_stockId, cancellationToken);
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Clear();
+                    ex.Message.PrintLineColor(ConsoleColor.Red);
+                    Console.Write("Для продолжения нажмите любую клавишу...");
+                    Console.ReadKey();
                     continue;
-
-                await _stockRepository.Delete(_stockId, cancellationToken);
-                return;
+                }
             }
 
-        } 
+        }
         #endregion
 
         #region AddParty
@@ -314,12 +349,9 @@ namespace pulse.Service
 
             var res = await _partyRepository.Create(party, cancellationToken);
             if (res)
-            {
-                "Партия сосоздана. Нажмите любую клавишу для продолжения...".PrintLineColor(ConsoleColor.Green);
-                Console.ReadKey();
-            }
+                return;
 
-        } 
+        }
         #endregion
 
         #region DeleteParty
@@ -330,35 +362,53 @@ namespace pulse.Service
         /// <returns></returns>
         private async Task DeleteParty(CancellationToken cancellationToken = default)
         {
-            Console.Clear();
-            await GetAllRetail(cancellationToken);
-            Console.Write("\r\nИд Торговой точки: ");
-            var _retailId = Console.ReadLine().ToInt();
-
-            await GetParties(_retailId, cancellationToken);
-            Console.Write("\r\nИд партии: ");
-            var _partyId = Console.ReadLine();
             while (true)
             {
-                Console.Clear();
-                var item = _parties.Where(q => q.PartyId == _partyId.ToInt()).First();
+                try
+                {
+                    Console.Clear();
+                    await GetAllRetail(cancellationToken);
+                    Console.Write("\r\nИд Торговой точки (0 для выхода): ");
+                    var _retailId = Console.ReadLine().ToInt();
 
-                $"[{item.PartyId}] Название товара: {item.ProductName}".PrintLineColor(ConsoleColor.White);
-                $"Торговая точка: {item.RetailName}; Склад: {item.StockName}; Количество: {item.Count}; Стоимость: {item.Price}".PrintLineColor(ConsoleColor.White);
+                    if (_retailId == 0)
+                        return;
 
-                "Вы действительно хотите удалить эту партию?\r\nЭто также удалит все партии для этого склада! [n/y]".PrintLineColor(ConsoleColor.Red);
-                var input = Console.ReadKey();
-                if (input.Key == ConsoleKey.N)
-                    return;
+                    await GetParties(_retailId, cancellationToken);
+                    Console.Write("\r\nИд партии: ");
+                    var _partyId = Console.ReadLine();
+                    while (true)
+                    {
+                        Console.Clear();
+                        var item = _parties.Where(q => q.PartyId == _partyId.ToInt()).First();
 
-                if (input.Key != ConsoleKey.Y)
+                        $"[{item.PartyId}] Название товара: {item.ProductName}".PrintLineColor(ConsoleColor.White);
+                        $"Торговая точка: {item.RetailName}; Склад: {item.StockName}; Количество: {item.Count}; Стоимость: {item.Price}".PrintLineColor(ConsoleColor.White);
+
+                        "Вы действительно хотите удалить эту партию?\r\nЭто также удалит все партии для этого склада! [n/y]".PrintLineColor(ConsoleColor.Red);
+                        var input = Console.ReadKey();
+                        if (input.Key == ConsoleKey.N)
+                            return;
+
+                        if (input.Key != ConsoleKey.Y)
+                            continue;
+
+                        var res = await _partyRepository.Delete(_partyId.ToInt(), cancellationToken);
+                        if (res)
+                            return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Clear();
+                    ex.Message.PrintLineColor(ConsoleColor.Red);
+                    Console.Write("Для продолжения нажмите любую клавишу...");
+                    Console.ReadKey();
                     continue;
+                }
 
-                var res = await _partyRepository.Delete(_partyId.ToInt(), cancellationToken);
-                if (res)
-                    return;
             }
-        } 
+        }
         #endregion
     }
 }

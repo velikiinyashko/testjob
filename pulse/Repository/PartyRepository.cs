@@ -32,7 +32,7 @@ namespace pulse.Repository
                 {
                     transaction.Rollback();
                     ex.Message.PrintLineColor(ConsoleColor.Red);
-                    Console.Write("Произошла ошибка при создании таблиц\r\nНажмите любую клавишу для продолжения...: ");
+                    Console.Write("Нажмите любую клавишу для продолжения...: ");
                     Console.ReadKey();
                 }
                 finally
@@ -71,7 +71,7 @@ namespace pulse.Repository
                 {
                     transaction.Rollback();
                     ex.Message.PrintLineColor(ConsoleColor.Red);
-                    Console.Write("Произошла ошибка при создании таблиц\r\nНажмите любую клавишу для продолжения...: ");
+                    Console.Write("Нажмите любую клавишу для продолжения...: ");
                     Console.ReadKey();
                 }
                 finally
@@ -122,7 +122,7 @@ namespace pulse.Repository
             catch (Exception ex)
             {
                 ex.Message.PrintLineColor(ConsoleColor.Red);
-                Console.Write("Произошла ошибка при создании таблиц\r\nНажмите любую клавишу для продолжения...: ");
+                Console.Write("Нажмите любую клавишу для продолжения...: ");
                 Console.ReadKey();
             }
             return _products;

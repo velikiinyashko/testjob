@@ -30,7 +30,7 @@ namespace pulse.Repository
                 {
                     transaction.Rollback();
                     ex.Message.PrintLineColor(ConsoleColor.Red);
-                    Console.Write("Произошла ошибка при сохранении данных\r\nНажмите любую клавишу для продолжения...: ");
+                    Console.Write("Нажмите любую клавишу для продолжения...: ");
                     Console.ReadKey();
                 }
                 finally
@@ -69,7 +69,7 @@ namespace pulse.Repository
                 {
                     transaction.Rollback();
                     ex.Message.PrintLineColor(ConsoleColor.Red);
-                    Console.Write("Произошла ошибка при удалении данных\r\nНажмите любую клавишу для продолжения...: ");
+                    Console.Write("Нажмите любую клавишу для продолжения...: ");
                     Console.ReadKey();
                 }
                 finally
