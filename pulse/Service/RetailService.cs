@@ -1,4 +1,6 @@
-﻿namespace pulse.Service
+﻿using System.Collections.ObjectModel;
+
+namespace pulse.Service
 {
     public class RetailService : IService
     {
@@ -7,6 +9,11 @@
         private readonly IRepository<Retail> _repository;
         private readonly IRepository<Stock> _stockRepository;
         private readonly IRepository<pulse.Model.Party> _partyRepository;
+        private readonly IRepository<Product> _productRepository;
+
+        private ObservableCollection<Stock> _stock = new();
+        private ObservableCollection<Product> _products = new();
+        private ObservableCollection<Party> _parties = new();
 
         Dictionary<ConsoleKey, GetEventRecord> _events;
 
@@ -16,6 +23,7 @@
             _repository = new RetailRepository();
             _stockRepository = new StockRepository();
             _partyRepository = new PartyRepository();
+            _productRepository = new ProductRepository();
             #endregion
 
             #region Заполняем меню
@@ -69,6 +77,7 @@
 
         }
 
+        #region GetStock
         /// <summary>
         /// Вывод списка аптек
         /// </summary>
@@ -77,13 +86,64 @@
         private async Task GetStock(int RetailId, CancellationToken cancellation = default)
         {
             List<Stock> result = new();
-            if (RetailId != 0)
-                result = await _stockRepository.GetAsync(RetailId, cancellation);
+
+            #region Загрузка складов в случае если коллекция пустая
+            if (_stock.Count == 0)
+            {
+                _stock = new(await _stockRepository.GetAllAsync(cancellation));
+            }
+            #endregion
+
+            //выводим на экран список складов в зависимости от RetailId,
+            //если 0 то обновляет и выводит все склады, либо выводит список для выбранной торговой точки
+            if (RetailId == 0)
+            {
+                _stock = new(await _stockRepository.GetAllAsync(cancellation));
+                foreach (var item in _stock)
+                    $"[{item.StockId}] Название склада: {item.Name}".PrintLineColor(ConsoleColor.White);
+            }
             else
-                result = await _stockRepository.GetAllAsync(cancellation);
-            foreach (var item in result)
-                $"[{item.StockId}] Название склада: {item.Name}".PrintLineColor(ConsoleColor.White);
+            {
+                result = _stock.Where(q => q.RetailId == RetailId).ToList();
+                foreach (var item in result)
+                    $"[{item.StockId}] Название склада: {item.Name}".PrintLineColor(ConsoleColor.White);
+            }
         }
+        #endregion
+
+        #region GetProduct
+        /// <summary>
+        /// Получение списка товаров
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task GetProduct(CancellationToken cancellationToken = default)
+        {
+            _products = new(await _productRepository.GetAllAsync(cancellationToken));
+            foreach (var item in _products)
+                $"[{item.ProductId}] Название товара: {item.Name}".PrintLineColor(ConsoleColor.White);
+        } 
+        #endregion
+
+        #region GetParties
+        /// <summary>
+        /// Получение списка партий
+        /// </summary>
+        /// <param name="RetailId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task GetParties(int? RetailId, CancellationToken cancellationToken = default)
+        {
+            _parties = new(await _partyRepository.GetAllAsync(cancellationToken));
+            if (RetailId != null)
+                _parties = new(_parties.Where(q => q.RetailId == RetailId).ToList());
+            foreach (var item in _parties)
+            {
+                $"[{item.PartyId}] Название товара: {item.ProductName}".PrintLineColor(ConsoleColor.White);
+                $"Торговая точка: {item.RetailName}; Склад: {item.StockName}; Количество: {item.Count}; Стоимость: {item.Price}".PrintLineColor(ConsoleColor.White);
+            }
+        } 
+        #endregion
 
         #region AddRetail
         /// <summary>
@@ -118,6 +178,7 @@
         }
         #endregion
 
+        #region DeleteRetail
         /// <summary>
         /// Метод удаления торговой точки
         /// </summary>
@@ -134,7 +195,7 @@
             {
                 Console.Clear();
                 await GetStock(_retailId, cancellationToken);
-                "Вы действительно хотите удалить эту точку?\r\nЭто также удалит все партии для этого склада! [n/y]".PrintLineColor(ConsoleColor.Red);
+                "Вы действительно хотите удалить эту точку?\r\nЭто также удалит все партии и склады! [n/y]".PrintLineColor(ConsoleColor.Red);
                 var input = Console.ReadKey();
                 if (input.Key == ConsoleKey.N)
                     return;
@@ -142,9 +203,12 @@
                 if (input.Key != ConsoleKey.Y)
                     continue;
 
-                await _repository.Delete(_retailId, cancellationToken);
+                var res = await _repository.Delete(_retailId, cancellationToken);
+                if (res)
+                    return;
             }
         }
+        #endregion
 
         #region AddStock
         /// <summary>
@@ -175,6 +239,7 @@
         }
         #endregion
 
+        #region DeleteStock
         /// <summary>
         /// Метод удаления склада
         /// </summary>
@@ -183,14 +248,21 @@
         private async Task DeleteStock(CancellationToken cancellationToken = default)
         {
             Console.Clear();
-            await GetStock(0, cancellationToken);
-            Console.Write("\r\nИд удаляемого склада: ");
+            await GetAllRetail(cancellationToken);
+            Console.Write("\r\nИд торговой точки: ");
+            var _retailId = Console.ReadLine().ToInt();
 
+            Console.Clear();
+            await GetStock(_retailId, cancellationToken);
+            Console.Write("\r\nИд склада: ");
             var _stockId = Console.ReadLine().ToInt();
+
             while (true)
             {
                 Console.Clear();
-                await GetStock(_stockId, cancellationToken);
+                var item = _stock.Where(q => q.StockId == _stockId).First();
+                $"[{item.StockId}] Название склада: {item.Name}".PrintLineColor(ConsoleColor.White);
+
                 "Вы действительно хотите удалить этот склад?\r\nЭто также удалит все партии для этого склада! [n/y]".PrintLineColor(ConsoleColor.Red);
                 var input = Console.ReadKey();
                 if (input.Key == ConsoleKey.N)
@@ -203,8 +275,10 @@
                 return;
             }
 
-        }
+        } 
+        #endregion
 
+        #region AddParty
         /// <summary>
         /// Метод добавления партии 
         /// </summary>
@@ -225,10 +299,10 @@
             Console.Write("Ид склада: ");
             party.StockId = Console.ReadLine().ToInt();
 
-            //ColorPrint.Separator();
-            //await GetProduct();
-            //Console.Write("Ид склада: ");
-            //party.StockId = Console.ReadLine().ToInt();
+            ColorPrint.Separator();
+            await GetProduct();
+            Console.Write("Ид склада: ");
+            party.ProductId = Console.ReadLine().ToInt();
 
             ColorPrint.Separator();
             Console.Write("Количество: ");
@@ -245,8 +319,10 @@
                 Console.ReadKey();
             }
 
-        }
+        } 
+        #endregion
 
+        #region DeleteParty
         /// <summary>
         /// Метод удаления партий
         /// </summary>
@@ -256,13 +332,20 @@
         {
             Console.Clear();
             await GetAllRetail(cancellationToken);
-            Console.Write("\r\nИд удаляемой партии: ");
-
+            Console.Write("\r\nИд Торговой точки: ");
             var _retailId = Console.ReadLine().ToInt();
+
+            await GetParties(_retailId, cancellationToken);
+            Console.Write("\r\nИд партии: ");
+            var _partyId = Console.ReadLine();
             while (true)
             {
                 Console.Clear();
-                await GetStock(_retailId, cancellationToken);
+                var item = _parties.Where(q => q.PartyId == _partyId.ToInt()).First();
+
+                $"[{item.PartyId}] Название товара: {item.ProductName}".PrintLineColor(ConsoleColor.White);
+                $"Торговая точка: {item.RetailName}; Склад: {item.StockName}; Количество: {item.Count}; Стоимость: {item.Price}".PrintLineColor(ConsoleColor.White);
+
                 "Вы действительно хотите удалить эту партию?\r\nЭто также удалит все партии для этого склада! [n/y]".PrintLineColor(ConsoleColor.Red);
                 var input = Console.ReadKey();
                 if (input.Key == ConsoleKey.N)
@@ -271,8 +354,11 @@
                 if (input.Key != ConsoleKey.Y)
                     continue;
 
-                await _repository.Delete(_retailId, cancellationToken);
+                var res = await _partyRepository.Delete(_partyId.ToInt(), cancellationToken);
+                if (res)
+                    return;
             }
-        }
+        } 
+        #endregion
     }
 }

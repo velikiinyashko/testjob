@@ -41,9 +41,46 @@ namespace pulse.Repository
             return false;
         }
 
-        public Task<bool> Delete(int Id, CancellationToken cancellationToken = default)
+        public async Task<bool> Delete(int Id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            using (var _connection = new SqlConnection(GetConnectionString().ConnectionString))
+            {
+                await _connection.OpenAsync(cancellationToken);
+
+                SqlTransaction transaction = _connection.BeginTransaction();
+                try
+                {
+                    SqlCommand command = _connection.CreateCommand();
+                    command.Connection = _connection;
+                    command.Transaction = transaction;
+
+                    command.CommandText = $"DELETE FROM Party WHERE RetailId={Id}";
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+
+                    command.CommandText = $"DELETE FROM Stock WHERE RetailId={Id}";
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+
+                    command.CommandText = $"DELETE FROM Retail WHERE RetailId={Id}";
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+
+                    transaction.Commit();
+                    Console.Clear();
+                    $"Склад успешно удален из базы".PrintLineColor(ConsoleColor.Green);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    ex.Message.PrintLineColor(ConsoleColor.Red);
+                    Console.Write("Произошла ошибка при удалении данных\r\nНажмите любую клавишу для продолжения...: ");
+                    Console.ReadKey();
+                }
+                finally
+                {
+                    _connection.Close();
+                }
+            }
+            return false;
         }
 
         public async Task<List<Retail>> GetAllAsync(CancellationToken cancellationToken = default)

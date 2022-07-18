@@ -54,10 +54,10 @@ namespace pulse.Repository
                     command.Connection = _connection;
                     command.Transaction = transaction;
 
-                    command.CommandText = $"DELETE Party WHERE StockId={Id}";
+                    command.CommandText = $"DELETE FROM Party WHERE StockId={Id}";
                     await command.ExecuteNonQueryAsync(cancellationToken);
 
-                    command.CommandText = $"DELETE Stock WHERE StockId={Id}";
+                    command.CommandText = $"DELETE FROM Stock WHERE StockId={Id}";
                     await command.ExecuteNonQueryAsync(cancellationToken);
 
                     transaction.Commit();

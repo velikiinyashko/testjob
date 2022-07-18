@@ -48,7 +48,7 @@
                     if (value.GetType() == typeof(string))
                         values.Add($"N'{value}'");
                     else if (value.GetType() == typeof(decimal))
-                        values.Add(value.ToString().Replace('.', ','));
+                        values.Add($"'{value.ToString().Replace(',', '.')}'");
                     else
                         values.Add(value);
                 }

@@ -9,7 +9,7 @@ namespace pulse.Repository
             using (var _connection = new SqlConnection(Extension.Extension.GetConnectionString().ConnectionString))
             {
                 await _connection.OpenAsync(cancellationToken);
- 
+
                 SqlTransaction transaction = _connection.BeginTransaction();
                 try
                 {
@@ -45,26 +45,66 @@ namespace pulse.Repository
 
         public async Task<bool> Delete(int Id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            using (var _connection = new SqlConnection(GetConnectionString().ConnectionString))
+            {
+                await _connection.OpenAsync(cancellationToken);
+
+                SqlTransaction transaction = _connection.BeginTransaction();
+                try
+                {
+                    SqlCommand command = _connection.CreateCommand();
+                    command.Connection = _connection;
+                    command.Transaction = transaction;
+
+                    command.CommandText = $"DELETE FROM Party WHERE ProductId={Id}";
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+
+                    command.CommandText = $"DELETE FROM Product WHERE ProductId={Id}";
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+
+                    transaction.Commit();
+                    Console.Clear();
+                    $"Склад успешно удален из базы".PrintLineColor(ConsoleColor.Green);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    ex.Message.PrintLineColor(ConsoleColor.Red);
+                    Console.Write("Произошла ошибка при удалении данных\r\nНажмите любую клавишу для продолжения...: ");
+                    Console.ReadKey();
+                }
+                finally
+                {
+                    _connection.Close();
+                }
+            }
+            return false;
         }
 
         public async Task<List<Product>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             List<Product> _products = new List<Product>();
-            using (var _connection = new SqlConnection(Extension.Extension.GetConnectionString().ConnectionString))
+            using (var _connection = new SqlConnection(GetConnectionString().ConnectionString))
             {
                 await _connection.OpenAsync(cancellationToken);
                 SqlCommand command = _connection.CreateCommand();
                 command.Connection = _connection;
-                command.CommandText = "SELECT ProductId,Name FROM Product";
+                command.CommandText = "SELECT * FROM v_product";
 
-                using(var reader = await command.ExecuteReaderAsync(cancellationToken))
+                using (var reader = await command.ExecuteReaderAsync(cancellationToken))
                 {
                     if (reader.HasRows)
                     {
-                        while(await reader.ReadAsync())
+                        while (await reader.ReadAsync())
                         {
-                            _products.Add(new() { ProductId = reader.GetValue(0).ToInt(), Name = reader.GetValue(1).ToString() });
+                            _products.Add(new()
+                            {
+                                ProductId = reader.GetValue(0).ToInt(),
+                                Name = reader.GetValue(1).ToString(),
+                                RetailId = reader.GetValue(2).ToInt(),
+                                Count = reader.GetValue(3).ToInt()
+                            }) ;
                         }
                     }
                 }

@@ -27,8 +27,6 @@ namespace TestPulse
 
         [TestCase("3.5")]
         [TestCase("3,5")]
-        [TestCase("35")]
-        [TestCase("3we")]
         public void TestToDecimal(string value)
         {
             var i = value.ToDecimal();
